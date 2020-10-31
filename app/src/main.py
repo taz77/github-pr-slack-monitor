@@ -116,7 +116,6 @@ def notify_slack(pulls, color='red', owner='', repo='', webhook='', age=3600):
     timetuple = normalize_seconds(int(age))
     agetext = str(timetuple.days) + ' days ' + str(timetuple.hours) + ' hours'
     payload = slack_payload(pulls, color, owner, repo, agetext)
-    json_obj = json.dumps(payload, indent=4)
     response = requests.post(
         webhook, data=json.dumps(payload),
         headers={'Content-Type': 'application/json'}
@@ -141,11 +140,11 @@ def slack_payload(pulls, color='red', owner='', repo='', agetext=''):
 
     if color == 'red':
         icon = ':red_circle:'
-        introtext = 'There are ' + str(
-            len(pulls)) + ' pull requests that need attention that are older than ' + agetext + icon
+        introtext = icon + ' There are ' + str(
+            len(pulls)) + ' pull requests that need attention that are older than ' + agetext
     else:
         icon = ':green_apple:'
-        introtext = 'There are ' + str(len(pulls)) + ' open pull requests that are less than ' + agetext + icon
+        introtext = icon + ' There are ' + str(len(pulls)) + ' open pull requests that are less than ' + agetext
 
     # Due to rate limits on slack, attempting to push information about every PR can go over rate limits on a
     # busy reop. It would take additional resources to post more information to Slack possibly including a Slack App.
@@ -191,7 +190,6 @@ def job(argv=None):
 
 def main():
     setup_vars()
-    #@TODO Turn down logging once working right.
     logging.basicConfig(level=logging.INFO)
     scheduler = BackgroundScheduler()
     scheduler.add_job(job, 'interval', seconds=int(config['interval']))
