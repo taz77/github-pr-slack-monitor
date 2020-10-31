@@ -30,9 +30,6 @@ def setup_logging():
     console_out.setFormatter(formatter)
     log.addHandler(console_out)
 
-    # @TODO turn this on with a var
-    # github.enable_console_debug_logging()
-
 
 def setup_vars():
     """
