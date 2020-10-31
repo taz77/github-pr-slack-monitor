@@ -3,10 +3,6 @@ language: bash
 services:
 - docker
 
-env:
-  matrix:
-  - NEXUS_VERSION=3.27.0 TAGS=0.0.6,latest NEXUS_BUILD=03
-
 script:
 - make 
 
