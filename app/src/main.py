@@ -38,18 +38,35 @@ def setup_vars():
     """
     Pull setup configuration from env vars.
     """
-    # Determine how far back we go.
-    thresh = int(os.getenv('GH_PR_THRESH'))
-    now = int(time.time())
-    age = now - thresh
-    # @TODO Check to make sure each one exists first.
-    config['githubtoken'] = os.getenv('GH_API_TOKEN')
-    config['gitrepo'] = os.getenv('GH_REPO_NAME')
-    config['gitowner'] = os.getenv('GH_OWNER')
-    config['gitorg'] = os.getenv('GH_GITHUB_ORG')
-    config['agethreshold'] = os.getenv('GH_PR_THRESH')
-    config['slackhook'] = os.getenv('SLACK_HOOK')
-    config['interval'] = os.getenv('GH_PR_INTERVAL')
+    if 'GH_API_TOKEN' in os.environ:
+        config['githubtoken'] = os.getenv('GH_API_TOKEN')
+    else:
+        raise ValueError('GH_API_TOKEN is not set')
+
+    if 'GH_REPO_NAME' in os.environ:
+        config['gitrepo'] = os.getenv('GH_REPO_NAME')
+    else:
+        raise ValueError('GH_REPO_NAME is not set')
+
+    if 'GH_OWNER' in os.environ:
+        config['gitowner'] = os.getenv('GH_OWNER')
+    else:
+        raise ValueError('GH_OWNER is not set')
+
+    if 'GH_PR_THRESH' in os.environ:
+        config['agethreshold'] = os.getenv('GH_PR_THRESH')
+    else:
+        raise ValueError('GH_PR_THRESH is not set')
+
+    if 'SLACK_HOOK' in os.environ:
+        config['slackhook'] = os.getenv('SLACK_HOOK')
+    else:
+        raise ValueError('SLACK_HOOK is not set')
+
+    if 'GH_PR_INTERVAL' in os.environ:
+        config['interval'] = os.getenv('GH_PR_INTERVAL')
+    else:
+        config['interval'] = 300
 
     return config
 
