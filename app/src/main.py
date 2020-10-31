@@ -113,7 +113,7 @@ def notify_slack(pulls, color='red', owner='', repo='', webhook='', age=3600):
     if not repo:
         raise Exception("Github repo is not configured")
 
-    timetuple = normalize_seconds(age)
+    timetuple = normalize_seconds(int(age))
     agetext = str(timetuple.days) + ' days ' + str(timetuple.hours) + ' hours'
     payload = slack_payload(pulls, color, owner, repo, agetext)
     json_obj = json.dumps(payload, indent=4)
@@ -184,15 +184,15 @@ def job(argv=None):
         else:
             green.append(str(item.number))
     if len(red) > 0:
-        notify_slack(red, 'red', config['gitowner'], config['gitrepo'], config['slackhook'])
+        notify_slack(red, 'red', config['gitowner'], config['gitrepo'], config['slackhook'], config['agethreshold'])
     if len(green) > 0:
-        notify_slack(green, 'green', config['gitowner'], config['gitrepo'], config['slackhook'])
+        notify_slack(green, 'green', config['gitowner'], config['gitrepo'], config['slackhook'], config['agethreshold'])
 
 
 def main():
     setup_vars()
     #@TODO Turn down logging once working right.
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     scheduler = BackgroundScheduler()
     scheduler.add_job(job, 'interval', seconds=int(config['interval']))
     scheduler.start()
