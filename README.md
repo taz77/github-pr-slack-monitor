@@ -1,18 +1,14 @@
+[![Build Status](https://travis-ci.org/taz77/github-pr-slack-monitor.svg?branch=master)](https://travis-ci.org/taz77/github-pr-slack-monitor)
+
 # Github PR Monitor Docker Service
 
-Fork, clone, or copy this repository to start your Docker Python application.
 
-# Running
-The python application is contained in the `app` folder. [Setuptools](https://setuptools.readthedocs.io/en/latest/) is used to install and manage dependencies. 
-
-
-# Installation
-We use Setuptools configuration file to control requirements. In this example there are extra requirements for devleopment that includes pandas. Installation is done via:
-
-```pip install -e .[dev]```
+## Building and Running Locally
+A docker-compose.yml has been provided to allow for ease in building and running this app locally. An environment vairalbe file is used to run the container. Create a .env variable file
+using the format described [here](https://docs.docker.com/compose/compose-file/#env_file).
 
 
-# Environment Variables
+## Environment Variables
 | Variable Name  | Value  |
 |---|---|
 | GH_API_TOKEN | Github API Access Key  |
@@ -23,7 +19,5 @@ We use Setuptools configuration file to control requirements. In this example th
 | GH_PR_INTERVAL  | The interval at which to poll Github and report to Slack  |
 
 
-
-
-# Base Image
+## Base Image
 We use the Python official base image that uses Alpine Linux.
