@@ -11,5 +11,18 @@ We use Setuptools configuration file to control requirements. In this example th
 
 ```pip install -e .[dev]```
 
+
+# Environment Variables
+|   |   |
+|---|---|
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+
+
 # Base Image
 We use the Python official base image that uses Alpine Linux.
