@@ -1,0 +1,183 @@
+import argparse
+import sys
+import os
+import logging
+import time
+import requests
+import json
+from github import Github
+from collections import defaultdict, namedtuple
+from apscheduler.schedulers.background import BackgroundScheduler
+from .__init__ import __version__
+
+parser = argparse.ArgumentParser(
+    description='A simple PR monitor for Github to notify slack')
+parser.add_argument('--version', action='version',
+                    version='Github PR Monitor ' + __version__)
+
+log = logging.getLogger(__name__)
+config = dict()
+
+
+def setup_logging():
+    """
+    Configure logging.
+    """
+    log.setLevel(logging.DEBUG)
+    console_out = logging.StreamHandler()
+    console_out.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    console_out.setFormatter(formatter)
+    log.addHandler(console_out)
+
+    # @TODO turn this on with a var
+    # github.enable_console_debug_logging()
+
+
+def setup_vars():
+    """
+    Pull setup configuration from env vars.
+    """
+    # Determine how far back we go.
+    thresh = int(os.getenv('GH_PR_THRESH'))
+    now = int(time.time())
+    age = now - thresh
+    # @TODO Check to make sure each one exists first.
+    config['githubtoken'] = os.getenv('GH_API_TOKEN')
+    config['gitrepo'] = os.getenv('GH_REPO_NAME')
+    config['gitowner'] = os.getenv('GH_OWNER')
+    config['gitorg'] = os.getenv('GH_GITHUB_ORG')
+    config['agethreshold'] = os.getenv('GH_PR_THRESH')
+    config['slackhook'] = os.getenv('SLACK_HOOK')
+    config['interval'] = os.getenv('GH_PR_INTERVAL')
+
+    return config
+
+
+def get_prs(client, gitowner, gitrepo):
+    """
+    Get the open Pull Requests.
+    """
+    repofetchname = gitowner + "/" + gitrepo
+    try:
+        repo = client.get_repo(repofetchname)
+        pulls = repo.get_pulls('open')
+    except client.GithubException.GithubException as e:
+        print(f"Got an error: {e.status} {e.data}")
+        logging.error(f'Error was reported with status {e.status} and data {e.data}')
+    return pulls
+
+
+def calculate_time_back(age):
+    now = int(time.time())
+    return now - age
+
+
+def normalize_seconds(seconds: int) -> tuple:
+    """
+    Convert seconds to days hours minutes seconds.
+    """
+    (days, remainder) = divmod(seconds, 86400)
+    (hours, remainder) = divmod(remainder, 3600)
+    (minutes, seconds) = divmod(remainder, 60)
+
+    return namedtuple("_", ("days", "hours", "minutes", "seconds"))(days, hours, minutes, seconds)
+
+
+def notify_slack(pulls, color='red', owner='', repo='', webhook='', age=3600):
+    """
+    Make Slack notification to webhook.
+    """
+
+    if not webhook:
+        raise Exception("Slack webhook is not configured")
+    if not owner:
+        raise Exception("Github owner is not configured")
+    if not repo:
+        raise Exception("Github repo is not configured")
+
+    timetuple = normalize_seconds(age)
+    agetext = str(timetuple.days) + ' days ' + str(timetuple.hours) + ' hours'
+    payload = slack_payload(pulls, color, owner, repo, agetext)
+    json_obj = json.dumps(payload, indent=4)
+    response = requests.post(
+        webhook, data=json.dumps(payload),
+        headers={'Content-Type': 'application/json'}
+    )
+    if response.status_code != 200:
+        raise ValueError(
+            'Request to slack returned an error %s, the response is:\n%s'
+            % (response.status_code, response.text)
+        )
+
+    return 0
+
+
+def slack_payload(pulls, color='red', owner='', repo='', agetext=''):
+    """
+    Build the JSON payload for Slack.
+    """
+
+    # Begin creating the JSON payload.
+    j = defaultdict(lambda: defaultdict(list))
+    j['blocks'] = []
+
+    if color == 'red':
+        icon = ':red_circle:'
+        introtext = 'There are ' + str(
+            len(pulls)) + ' pull requests that need attention that are older than ' + agetext + icon
+    else:
+        icon = ':green_apple:'
+        introtext = 'There are ' + str(len(pulls)) + ' open pull requests that are less than ' + agetext + icon
+
+    # Due to rate limits on slack, attempting to push information about every PR can go over rate limits on a
+    # busy reop. It would take additional resources to post more information to Slack possibly including a Slack App.
+    j['blocks'].append({
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": introtext
+        }
+    })
+    return j
+
+
+def job(argv=None):
+    if argv is None:
+        argv = sys.argv
+    parser.parse_args(argv[1:])
+    # Start logging.
+    setup_logging()
+    config = setup_vars()
+    g = Github(config['githubtoken'])
+    pullrequests = get_prs(g, config['gitowner'], config['gitrepo'])
+    cutoff = calculate_time_back(int(config['agethreshold']))
+    green = list()
+    red = list()
+    # Roll through the pull requests and sort into two buckets.
+    for item in pullrequests:
+        created = int(item.created_at.timestamp())
+        url = item.html_url
+        if created < cutoff:
+            red.append(str(item.number))
+        else:
+            green.append(str(item.number))
+    if len(red) > 0:
+        notify_slack(red, 'red', config['gitowner'], config['gitrepo'], config['slackhook'])
+    if len(green) > 0:
+        notify_slack(green, 'green', config['gitowner'], config['gitrepo'], config['slackhook'])
+
+
+def main():
+    setup_vars()
+    logging.basicConfig(level=logging.DEBUG)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(job, 'interval', seconds=int(config['interval']))
+    scheduler.start()
+    try:
+        # This is here to simulate application activity (which keeps the main thread alive).
+        while True:
+            time.sleep(2)
+    except (KeyboardInterrupt, SystemExit):
+        # Not strictly necessary if daemonic mode is enabled but should be done if possible
+        scheduler.shutdown()

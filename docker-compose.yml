@@ -1,0 +1,7 @@
+version: '3'
+services:
+  mypythondockerapp:
+    image: mypythondockerapp
+    build:
+      context: .
+      dockerfile: Dockerfile
