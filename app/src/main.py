@@ -16,6 +16,7 @@ parser.add_argument('--version', action='version',
                     version='Github PR Monitor ' + __version__)
 
 log = logging.getLogger(__name__)
+# Configuraiton is going to be global since this has been done in a functional manner instead of OO.
 config = dict()
 
 
@@ -83,6 +84,9 @@ def get_prs(client, gitowner, gitrepo):
 
 
 def calculate_time_back(age):
+    """
+    Calculate Unix time back from age.
+    """
     now = int(time.time())
     return now - age
 
@@ -102,7 +106,6 @@ def notify_slack(pulls, color='red', owner='', repo='', webhook='', age=3600):
     """
     Make Slack notification to webhook.
     """
-
     if not webhook:
         raise Exception("Slack webhook is not configured")
     if not owner:
@@ -157,6 +160,9 @@ def slack_payload(pulls, color='red', owner='', repo='', agetext=''):
 
 
 def job(argv=None):
+    """
+    Root job that is run by scheduler.
+    """
     if argv is None:
         argv = sys.argv
     parser.parse_args(argv[1:])
@@ -166,6 +172,7 @@ def job(argv=None):
     g = Github(config['githubtoken'])
     pullrequests = get_prs(g, config['gitowner'], config['gitrepo'])
     cutoff = calculate_time_back(int(config['agethreshold']))
+    # Buckets of PR numbers.
     green = list()
     red = list()
     # Roll through the pull requests and sort into two buckets.
@@ -184,6 +191,7 @@ def job(argv=None):
 
 def main():
     setup_vars()
+    #@TODO Turn down logging once working right.
     logging.basicConfig(level=logging.DEBUG)
     scheduler = BackgroundScheduler()
     scheduler.add_job(job, 'interval', seconds=int(config['interval']))
