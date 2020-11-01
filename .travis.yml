@@ -10,7 +10,8 @@ python:
 install: 
   - pip install --upgrade pip
   - cd app
-  - pip install -e [.dev] 
+  - pip install .
+  - pip install -e '.[dev]'
 
 services:
 - docker
