@@ -38,4 +38,7 @@ logs:
 clean:
 	-docker rm -f $(NAME)
 
+test:
+	cd app; pytest
+
 release: build push
