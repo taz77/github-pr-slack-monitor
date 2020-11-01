@@ -196,6 +196,7 @@ def job(argv=None):
 
 def main():
     setup_vars()
+    # @TODO This should be configurable.
     logging.basicConfig(level=logging.INFO)
     scheduler = BackgroundScheduler()
     scheduler.add_job(job, 'interval', seconds=int(config['interval']))
