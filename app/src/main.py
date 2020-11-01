@@ -38,6 +38,7 @@ def setup_vars():
     """
     Pull setup configuration from env vars.
     """
+    # @TODO Missing sanitization of variables.
     if 'GH_API_TOKEN' in os.environ:
         config['githubtoken'] = os.getenv('GH_API_TOKEN')
     else:
