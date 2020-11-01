@@ -196,6 +196,9 @@ def job(argv=None):
 
 
 def main():
+    """
+    Main function that kicks off scheduled jobs.
+    """
     setup_vars()
     # @TODO This should be configurable.
     logging.basicConfig(level=logging.INFO)
