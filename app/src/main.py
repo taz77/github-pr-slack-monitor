@@ -1,13 +1,15 @@
 import argparse
-import sys
-import os
-import logging
-import time
-import requests
 import json
-from github import Github
+import logging
+import os
+import sys
+import time
 from collections import defaultdict, namedtuple
+
+import requests
 from apscheduler.schedulers.background import BackgroundScheduler
+from github import Github
+
 from .__init__ import __version__
 
 parser = argparse.ArgumentParser(
@@ -60,6 +62,10 @@ def setup_vars():
         config['slackhook'] = os.getenv('SLACK_HOOK')
     else:
         raise ValueError('SLACK_HOOK is not set')
+    try:
+        requests.get(config['slackhook'])
+    except requests.ConnectionError as exception:
+        raise ValueError('Invalid URL - SLACK_HOOK is not a valid URL')
 
     if 'GH_PR_INTERVAL' in os.environ:
         config['interval'] = os.getenv('GH_PR_INTERVAL')
