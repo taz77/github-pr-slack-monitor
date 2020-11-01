@@ -1,4 +1,4 @@
 {
-  "environment": "prod",
+  "env": "prod",
   "replicas": 1
 }
