@@ -23,8 +23,10 @@ env:
 script:
 - cd ${TRAVIS_BUILD_DIR}
 - make test
-- make 
+- make
 
-after_success:
-- . "${TRAVIS_BUILD_DIR}/release.sh"
-
+deploy:
+  provider: script
+  script: bash ${TRAVIS_BUILD_DIR}/release.sh
+  on:
+    branch: master
