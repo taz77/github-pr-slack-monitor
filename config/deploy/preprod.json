@@ -1,4 +1,4 @@
 {
-  "environment": "preprod",
+  "env": "preprod",
   "replicas": 1
 }
