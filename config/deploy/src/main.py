@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import argparse
-import sys
 import os
-from .jsonreader import JsonReader
-import json
-from mako.template import Template
+import sys
+
 from mako import exceptions
+from mako.template import Template
+
+from .jsonreader import JsonReader
 
 
 def get_vars():
@@ -55,6 +56,7 @@ def get_vars():
         config['tag'] = 'latest'
 
     return config
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
