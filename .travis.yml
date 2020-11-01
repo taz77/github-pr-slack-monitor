@@ -1,5 +1,5 @@
 sudo: true
-dist: docker
+dist: python:3.8
 
 jobs:
   include:
